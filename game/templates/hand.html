@@ -1,0 +1,26 @@
+<div class="hand">
+{% for card in status.hand %}
+<div class="card">
+    <div class="top" style="
+            {% if card.color == 'black' %} color: white {% endif %};
+            background-color: {{ card.color }}">
+        <div><u>${{ card.dollar_value or 0 }}M -- {{ card.card_type or 'TYPE'}}</u></div>
+        <div>{{ card.name }}</div>
+        <div>{{ card.description }}</div>
+    </div>
+    <div class="bottom" style="
+            {% if card.secondary_color == 'black' %} color: white {% endif %};
+            background-color: {{ card.secondary_color }}
+    ">
+        {% if card.secondary_color %}<a onclick=flip({{ card.id }})>FLIP</a>{% endif %}<br/>
+        {% if card.card_type != 'money' 
+            and card.card_type != 'property'
+            and card.card_type != 'property wild card'
+        %}<a onclick=move({{ status.turn.id }},{{ card.id }},asCash=true)>Play As Cash</a>{% endif %}<br/>
+        {% if card.name != 'Hotel' and card.name != 'House' %}
+            <a onclick=move({{ status.turn.id }},{{ card.id }})>Play</a>
+        {% endif %}
+    </div>
+</div>
+{% endfor %}
+</div>

@@ -1,0 +1,44 @@
+<table>
+    <tr>
+        <th></th>
+        <th colspan="{{ moneys|length }}">Money</th>
+        <th colspan="{{ monopolies.values() | sum }}">Property</th>
+    </tr>
+    <tr>
+        <th></th>
+        {% for money in moneys %}
+            <th>${{ money }}M</th>
+        {% endfor %}
+        {% for color, cnt in monopolies.items() %}
+            <th style="color: {{ color }}" colspan="{{ cnt }}">{{ color }}</th>
+        {% endfor %}
+    </tr>
+    {% for id, user in status.users.items() %}
+    <tr>
+        <td {% if id == status.turn.user %}style="background-color: yellow"{% endif %}>
+            {{ user.name }}<br/>
+            cards in hand: {{ user.cards.hand_count }}
+        </td>
+        {% for money in moneys %}
+            <td>
+                {% if user.cards.table.money[money]|length %}
+                    ${{ money * user.cards.table.money[money]|length }}M
+                {% endif %}
+            </td>
+        {% endfor %}
+        {% for color, cnt in monopolies.items() %}
+            {% for card in user.cards.table.property[color] %}
+                <td style="background: {{ card.secondary_color or color }}">
+                    <!-- TODO: ENABLE FLIP ON WILDS -->
+                    ${{ card.dollar_value }}M
+                </td>
+            {% endfor %}
+
+            {% for i in range(cnt - user.cards.table.property[color]|length) %}
+                <td>&nbsp;&nbsp;&nbsp;</td>
+            {% endfor %}
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+

@@ -1,0 +1,9 @@
+<div class="action">
+    {% if status.action == 'end_turn' %}
+        <button onclick=endTurn({{ status.game_id }},{{ status.turn.id }})>END TURN</button>
+    {% elif status.action == 'wait' %}
+        <h1>{{ status.users[status.turn.user].name }}'s Turn</h1>
+    {% elif status.action == 'payment' %}
+        <h1>PAY UP!</h1>
+    {% endif %}
+</div>

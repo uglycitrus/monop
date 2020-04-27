@@ -1,0 +1,10 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+<div>
+    <h1>GAMES</h1>
+    {% for game in games %}
+        <a href="{% url 'game_detail' game.id %}">Game</a>
+    {% endfor %}
+</div>
+{% endblock %}
