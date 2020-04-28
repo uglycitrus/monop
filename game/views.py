@@ -7,6 +7,7 @@ from deck.constants import MONOPOLIES
 from .models import Game
 from .services import status, start_turn as start_turn_service
 
+
 MONEYS = (1, 2, 3, 4, 5, 10, )
 
 
@@ -23,6 +24,7 @@ def detail(request, game_id):
         request,
         'index.html',
         context={
+            'you': request.user.id,
             'status': game_status,
             'monopolies': dict(MONOPOLIES),
             'moneys': MONEYS,

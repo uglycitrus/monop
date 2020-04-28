@@ -12,13 +12,13 @@
             {% if card.secondary_color == 'black' %} color: white {% endif %};
             background-color: {{ card.secondary_color }}
     ">
-        {% if card.secondary_color %}<a onclick=flip({{ card.id }})>FLIP</a>{% endif %}<br/>
+        {% if card.secondary_color %}<button onclick=flip({{ card.id }})>FLIP</button>{% endif %}<br/>
         {% if card.card_type != 'money' 
             and card.card_type != 'property'
             and card.card_type != 'property wild card'
-        %}<a onclick=move({{ status.turn.id }},{{ card.id }},asCash=true)>Play As Cash</a>{% endif %}<br/>
+        %}<button onclick=move({{ status.turn.id }},{{ card.id }},asCash=true)>Cash</button>{% endif %}<br/>
         {% if card.name != 'Hotel' and card.name != 'House' %}
-            <a onclick=move({{ status.turn.id }},{{ card.id }})>Play</a>
+            <button onclick=move({{ status.turn.id }},{{ card.id }})>Play</button>
         {% endif %}
     </div>
 </div>

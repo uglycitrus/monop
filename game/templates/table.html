@@ -15,20 +15,37 @@
     </tr>
     {% for id, user in status.users.items() %}
     <tr>
-        <td {% if id == status.turn.user %}style="background-color: yellow"{% endif %}>
+        <td 
+            {% if id != you and status.action.type == 'Pick Payment Victim' %}
+                onclick=pickVictim({{status.action.payment.id}},{{ id }})
+                class="clicky"
+            {% elif id == status.turn.user %}
+                style="background-color: yellow"
+            {% endif %}>
             {{ user.name }}<br/>
             cards in hand: {{ user.cards.hand_count }}
         </td>
         {% for money in moneys %}
-            <td>
-                {% if user.cards.table.money[money]|length %}
-                    ${{ money * user.cards.table.money[money]|length }}M
-                {% endif %}
-            </td>
+            {% if user.cards.table.money[money]|length %}
+                <td
+                    {% if id == you
+                            and status.action.type == 'payment'
+                            and status.action.payments[you]  %}
+                        onclick=pay({{status.action.payments[you].id}},{{ user.cards.table.money[money][0].id }})
+                        class="clicky"
+                    {% endif %}>
+                        ${{ money * user.cards.table.money[money]|length }}M
+                </td>
+            {% else %}
+                <td></td>
+            {% endif %}
         {% endfor %}
         {% for color, cnt in monopolies.items() %}
             {% for card in user.cards.table.property[color] %}
-                <td style="background: {{ card.secondary_color or color }}">
+                <td 
+                    style="
+                        {% if card.color == 'black' %} color: white {% endif %};
+                        background: {{ card.secondary_color or color }}">
                     <!-- TODO: ENABLE FLIP ON WILDS -->
                     ${{ card.dollar_value }}M
                 </td>

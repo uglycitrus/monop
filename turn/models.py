@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class DealBreaker(models.Model):
@@ -13,20 +14,6 @@ class DealBreaker(models.Model):
 
     class Meta:
         db_table = 'deal_breaker'
-
-
-class Payment(models.Model):
-    move = models.ForeignKey('Move', on_delete=models.CASCADE, related_name='payments')
-    amount = models.IntegerField()
-    victim = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True)
-    received = models.ManyToManyField('deck.Card')
-
-    class Meta:
-        db_table = 'payment'
 
 
 class ForcedDeal(models.Model):
@@ -89,3 +76,17 @@ class Turn(models.Model):
         unique_together = (
             ('game', 'is_active'),
         )
+
+
+    def is_paid(self):
+        return (
+            self.payments
+                .annotate(paid=Sum('received__dollar_value'))
+                .filter(paid__lt=F('amount')).exists()
+        )
+
+    def get_active_move(self):
+        try:
+            return self.moves.get(is_active=True)
+        except ObjectDoesNotExist:
+            return None

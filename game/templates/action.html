@@ -1,9 +1,13 @@
 <div class="action">
-    {% if status.action == 'end_turn' %}
+    {% if status.action.type == 'payment' %}
+        {% for victim_id, payment in status.action.payments.items() %}
+            <h1>{{ payment.victim or '?' }}, PAY UP ${{ payment.amount }}M!</h1>
+        {% endfor %}
+    {% elif status.action.type == 'Pick Payment Victim' %}
+        <h1>Pick Victim</h1>
+    {% elif status.turn.user == you %}
         <button onclick=endTurn({{ status.game_id }},{{ status.turn.id }})>END TURN</button>
-    {% elif status.action == 'wait' %}
+    {% else %}
         <h1>{{ status.users[status.turn.user].name }}'s Turn</h1>
-    {% elif status.action == 'payment' %}
-        <h1>PAY UP!</h1>
     {% endif %}
 </div>

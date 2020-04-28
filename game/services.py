@@ -1,7 +1,5 @@
 from collections import defaultdict
 
-from django.core.exceptions import ObjectDoesNotExist
-
 from deck.services import build_deck, deal, DeckStatus, draw
 from turn.services import end_turn
 from .models import Game, Player
@@ -28,14 +26,10 @@ def start_turn(game):
 
 
 def whos_turn(game):
-    try:
-        turn = game.turns.get(is_active=True)
-    except ObjectDoesNotExist:
+    turn, found = game.get_active_turn()
+    if found and not turn.get_active_move() and turn.moves.count() >= 3:
+        end_turn(turn, None)
         turn = start_turn(game)
-    else:
-        if turn.moves.count() >= 3:
-            end_turn(turn.id, None)
-            turn = start_turn(game)
     return turn
 
 
@@ -45,22 +39,38 @@ def make_winner(game, user_id):
         user=user_id,
         is_winner=None).update(is_winner=True)
 
+def _payment_action_mapper(turn, user, active_move):
+    if turn.user == user:
+        payment = active_move.payments.filter(victim__isnull=True).first()
+        if payment:
+            return {
+                'type': 'Pick Payment Victim',
+                'payment_id': payment.id,
+            }
+    return {
+        'type': 'payment',
+        'payments': {p.victim.id if p.victim else None: {
+                'id': p.id,
+                'amount': p.amount,
+                'victim': p.victim.username if p.victim else None, 
+            }
+            for p in active_move.payments.all()
+        },
+    }
+
 
 def _action_picker(turn, user):
-    try:
-        active_move = turn.moves.get(is_active=True)
-    except ObjectDoesNotExist:
-        active_move = None
+    active_move = turn.get_active_move()
     if active_move:
         if active_move.payments.exists():
-            return 'payment'
+            _payment_action_mapper
         else:
-            return 'action is happening'
+            return {'type': 'action is happening'}
     else:
         if turn.user == user:
-            return 'end_turn'
+            return {'type': 'end_turn'}
         else:
-            return 'wait'
+            return {'type': 'wait'}
 
 
 def status(game, user):
@@ -68,6 +78,7 @@ def status(game, user):
     deck_status.get_status()
     players = Player.objects.filter(game=game)
     rtrn = {
+        'winner': deck_status.winner_id,
         'hand': deck_status.hand,
         'game_id': game.id,
         'users': {
@@ -80,14 +91,12 @@ def status(game, user):
     if deck_status.winner_id:
         make_winner(game, deck_status.winner_id)
         rtrn.update({
-            'winner': deck_status.winner_id,
             'turn': None,
 	    'action': None,
         })
     else:
         turn = whos_turn(game)
         rtrn.update({
-            'winner': None,
 	    'action': _action_picker(turn, user),
             'turn': {
                 'id': turn.id,

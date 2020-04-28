@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class Player(models.Model):
@@ -22,3 +23,9 @@ class Game(models.Model):
 
     class Meta:
         db_table = 'game'
+
+    def get_active_turn(self):
+        try:
+            return self.turns.get(is_active=True), True
+        except ObjectDoesNotExist:
+            return start_turn(self), False

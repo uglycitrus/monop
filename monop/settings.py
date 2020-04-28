@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'payment.apps.PaymentConfig',
     'turn.apps.TurnConfig',
     'game.apps.GameConfig',
     'deck.apps.DeckConfig',

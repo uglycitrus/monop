@@ -22,6 +22,11 @@
             text-align: center;
             height: 25%;
         }
+
+        .clicky {
+            cursor: pointer;
+            border: 2px solid red;
+        }
     </style>
 
     <script>
@@ -53,6 +58,14 @@
 
         function startTurn(gameID) {
             postXHR("http://127.0.0.1:8000/games/" + gameID + "/start-turn", reqListener);
+        }
+
+        function pickVictim(paymentID, victimID) {
+            postXHR("http://127.0.0.1:8000/payments/" + paymentID + "/victim/" + victimID , reqListener);
+        }
+
+        function pay(paymentID, cardID) {
+            postXHR("http://127.0.0.1:8000/payments/" + paymentID + "/pay/" + cardID , reqListener);
         }
 
         function endTurnListener (gameID) {

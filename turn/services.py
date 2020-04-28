@@ -1,8 +1,9 @@
 from deck.services import place, play, draw, max_rent
-from .models import Turn, Move, SlyDeal, ForcedDeal, DealBreaker, Payment
+from payment.models import Payment
+from .models import Turn, Move, SlyDeal, ForcedDeal, DealBreaker
 
 
-def _validate_move(turn, index, card, user_id):
+def _validate_move(turn, index, card, user_id, as_cash=False):
     if index >= 3:
         # inclusive b/c if this is move #3 it's not in the DB yet
         raise Exception('only 3 moves per turn')
@@ -10,7 +11,7 @@ def _validate_move(turn, index, card, user_id):
         raise Exception('permission denied')
     if turn.moves.filter(is_active=True).exists():
         raise Exception('previous move hasn\'t completed')
-    if card.is_double_rent:
+    if card.is_double_rent and not as_cash:
         try:
             previous_move = Move.objects.get(
                 turn=turn,
@@ -22,7 +23,7 @@ def _validate_move(turn, index, card, user_id):
 
 def move(turn, card, user_id, as_cash=False):
     index = turn.moves.count()
-    _validate_move(turn, index, card, user_id)
+    _validate_move(turn, index, card, user_id, as_cash=as_cash)
     move = Move.objects.create(
         turn=turn,
         card=card,
@@ -57,11 +58,14 @@ def _action_mapper(move, card, turn, user_id):
 # TODO: 'Hotel', 'House'
 
 
-def end_turn(turn_id, user_id):
+def end_turn(turn, user_id):
     kwargs = {
-        'id': turn_id,
+        'id': turn.id,
         'is_active': True,
     }
     if user_id:
         kwargs['user_id'] = user_id
+    active_move = turn.moves.filter(is_active=True).first()
+    if active_move and not active_move.is_paid():
+        raise Exception('active move not paid')
     turn = Turn.objects.filter(**kwargs).update(is_active=None)
