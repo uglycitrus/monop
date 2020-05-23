@@ -32,7 +32,7 @@ def whos_turn(game):
         if not active_move and turn.moves.count() >= 3:
             end_turn(turn, None)
             turn = start_turn(game)
-        elif active_move and active_move.is_paid():
+        elif active_move and active_move.is_complete():
             turn = end_move(active_move)
     else:
         turn = start_turn(game)
@@ -70,6 +70,19 @@ def _action_picker(turn, user):
     if active_move:
         if active_move.payments.exists():
             return _payment_action_mapper(turn, user, active_move)
+        elif active_move.forceddeal:
+            if not (active_move.forceddeal.offered_id and active_move.forceddeal.requested_id): 
+                return {'type': 'ForcedDeal1', 'id': active_move.forceddeal.id}
+            else:
+                return {
+                    'type': 'ForcedDeal2',
+                    'id': active_move.forceddeal.id,
+                    'highlighted_cards': [
+                        active_move.forceddeal.offered_id,
+                        active_move.forceddeal.requested_id,
+                    ]
+                }
+            
         else:
             return {'type': 'action is happening'}
     else:

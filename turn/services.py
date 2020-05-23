@@ -60,19 +60,20 @@ def _action_mapper(move, card, turn, user_id):
 
 
 def end_move(move):
-    Move.objects.filter(id=move.id, is_active=True).update(is_active=False)
+    Move.objects.filter(id=move.id, is_active=True).update(is_active=None)
     return end_turn(move.turn, None)
 
 def end_turn(turn, user_id):
-    if turn.moves.count() < 3:
-        return turn
-    active_move = turn.moves.filter(is_active=True).first()
-    if active_move:
-        if active_move.is_paid():
+    if not user_id:
+        if turn.moves.count() < 3:
             return turn
-        else:
-            Move.objects.filter(
-                id=active_move.id, is_active=True).update(is_active=None)
+        active_move = turn.moves.filter(is_active=True).first()
+        if active_move:
+            if active_move.is_complete():
+                return turn
+            else:
+                Move.objects.filter(
+                    id=active_move.id, is_active=True).update(is_active=None)
     kwargs = {
         'id': turn.id,
         'is_active': True,
@@ -80,3 +81,28 @@ def end_turn(turn, user_id):
     if user_id:
         kwargs['user_id'] = user_id
     return Turn.objects.filter(**kwargs).update(is_active=None)
+
+
+def pick(move, card, user_id):
+    fd = move.forceddeal
+    is_card_yours = move.turn.user_id == card.user_table_id
+    if fd:
+        if is_card_yours:
+            ForcedDeal.objects.filter(
+                id=fd.id,
+                offered=None
+            ).update(offered=card)
+        elif fd.requested and (card == fd.requested or card.is_say_no):
+            ForcedDeal.objects.filter(
+                id=fd.id,
+                received=None
+            ).update(received=card)
+            Card.objects.filter(
+                id=card.id, user_table_id=card.user_id).update(
+                user_table_id=move.turn.user_id)
+            end_move(move)
+        else:
+            ForcedDeal.objects.filter(
+                id=fd.id,
+                requested=None
+            ).update(requested=card)

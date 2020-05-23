@@ -21,12 +21,19 @@ class ForcedDeal(models.Model):
     move = models.OneToOneField('Move', on_delete=models.CASCADE)
     offered = models.ForeignKey(
         'deck.Card',
+        null=True,
         on_delete=models.CASCADE,
         related_name='forced_deal_offered')
     requested = models.ForeignKey(
         'deck.Card',
+        null=True,
         on_delete=models.CASCADE,
         related_name='forced_deal_requested')
+    received = models.ForeignKey(
+        'deck.Card',
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='forced_deal_received')
 
     class Meta:
         db_table = 'forced_deal'
@@ -36,10 +43,12 @@ class SlyDeal(models.Model):
     move = models.OneToOneField('Move', on_delete=models.CASCADE)
     requested = models.ForeignKey(
         'deck.Card',
+        null=True,
         on_delete=models.CASCADE,
         related_name='sly_deal_requested')
     received = models.ForeignKey(
         'deck.Card',
+        null=True,
         on_delete=models.CASCADE,
         related_name='sly_deal_received')
 
@@ -62,6 +71,15 @@ class Move(models.Model):
             ('turn', 'index'),
             ('turn', 'is_active'),
         )
+
+    def is_complete(self):
+        return self.is_paid() and self.is_forced_deal_done()
+
+    def is_forced_deal_done(self):
+        if self.forceddeal:
+            return self.forceddeal.received
+        else:
+            return True
 
     def is_paid(self):
         return not (

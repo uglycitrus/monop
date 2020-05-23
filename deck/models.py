@@ -6,7 +6,7 @@ from django.conf import settings
 from .constants import RENT_VALUES
 from .deck_rules import (
     DECK_RULES, SLY_DEAL, FORCED_DEAL, DEAL_BREAKER, PASS_GO, DEBT_COLLECTOR,
-    BIRTHDAY, RENT, DOUBLE_RENT, PROPERTY, PROPERTY_WILD,
+    BIRTHDAY, RENT, DOUBLE_RENT, PROPERTY, PROPERTY_WILD, SAY_NO,
 )
 
 
@@ -100,6 +100,10 @@ class Card(models.Model):
     @property
     def is_forced_deal(self):
         return self.name == FORCED_DEAL
+
+    @property
+    def is_say_no(self):
+        return self.name == SAY_NO
 
     @property
     def is_deal_breaker(self):

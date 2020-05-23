@@ -1,6 +1,7 @@
 from collections import OrderedDict
 
 
+SAY_NO = 'Just Say No'
 SLY_DEAL = 'Sly Deal'
 FORCED_DEAL = 'Forced Deal'
 DEAL_BREAKER = 'Deal Breaker'
@@ -33,7 +34,7 @@ DECK_RULES = {
             'count': 2,
         },
         {
-            'name': 'Just Say No',
+            'name': SAY_NO,
             'description': '',
             'dollar_value': 4,
             'count': 3,

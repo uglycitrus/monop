@@ -1,3 +1,6 @@
+
+
+
 <html>
 <head>
     <style>
@@ -22,11 +25,15 @@
             text-align: center;
             height: 25%;
         }
+    
+        .highlighted {
+            border: 2px solid red;
+        }
 
         .clicky {
             cursor: pointer;
-            border: 2px solid red;
         }
+
     </style>
 
     <script>
@@ -66,6 +73,10 @@
 
         function pay(paymentID, cardID) {
             postXHR("/payments/" + paymentID + "/pay/" + cardID , reqListener);
+        }
+
+        function pick(turnID, cardID) {
+            postXHR("/turn/" + turnID + "/pick/" + cardID , reqListener);
         }
 
         function endTurnListener (gameID) {

@@ -18,7 +18,7 @@
         <td 
             {% if id != you and status.action.type == 'Pick Payment Victim' %}
                 onclick=pickVictim({{status.action.payment_id}},{{ id }})
-                class="clicky"
+                class="clicky highlighted"
             {% elif id == status.turn.user %}
                 style="background-color: yellow"
             {% endif %}>
@@ -32,7 +32,7 @@
                             and status.action.type == 'payment'
                             and status.action.payments[you]  %}
                         onclick=pay({{status.action.payments[you].id}},{{ user.cards.table.money[money][0].id }})
-                        class="clicky"
+                        class="clicky highlighted"
                     {% endif %}>
                         ${{ money * user.cards.table.money[money]|length }}M
                 </td>
@@ -47,7 +47,14 @@
                         and status.action.type == 'payment'
                         and status.action.payments[you]  %}
                     onclick=pay({{status.action.payments[you].id}},{{ card.id }})
-                    class="clicky"
+                    class="clicky highlighted"
+                {% elif status.turn.user == you
+                        and status.action.type == 'ForcedDeal1' %}
+                    onclick=pick({{status.turn.id}},{{ card.id }})
+                    class="clicky highlighted"
+                {% elif card.id in status.action.highlighted_cards %}
+                    onclick=pick({{status.turn.id}},{{ card.id }})
+                    class="clicky highlighted"
                 {% endif %}
                     style="
                         {% if card.color == 'black' %} color: white {% endif %};

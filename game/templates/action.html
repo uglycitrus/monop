@@ -5,6 +5,14 @@
         {% endfor %}
     {% elif status.action.type == 'Pick Payment Victim' %}
         <h1>Pick Victim</h1>
+    {% elif status.action.type == 'ForcedDeal1' %}
+        {% if status.turn.user == you %}
+            <h1>Pick 2 Cards</h1>
+        {% else %}
+            <h1>Forced Deal!</h1>
+        {% endif %}
+    {% elif status.action.type == 'ForcedDeal2' %}
+        <h1>Accept Deal, or Say No</h1>
     {% elif status.turn.user == you %}
         <button onclick=endTurn({{ status.game_id }},{{ status.turn.id }})>END TURN</button>
     {% else %}
