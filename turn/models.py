@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models.functions import Coalesce
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -63,10 +64,11 @@ class Move(models.Model):
         )
 
     def is_paid(self):
-        return (
+        return not (
             self.payments
-                .annotate(paid=models.Sum('received__dollar_value'))
-                .filter(paid__gte=models.F('amount')).exists()
+                .annotate(paid=Coalesce(models.Sum('received__dollar_value'), 0))
+                .filter(paid__lt=models.F('amount'))
+                .exists()
         )
 
 

@@ -11,14 +11,13 @@ def assign_victim(payment_id, victim_id, user_id):
 
 
 def pay(payment, card, user_id):
+    # TODO: handle race
     if payment.is_paid():
-        # TODO: handle race
+        raise Exception('all squared away')
+    else:
         payment.received.add(card)
         Card.objects.filter(
             id=card.id,
             user_table_id=user_id).update(
             user_table_id=payment.move.turn.user_id)
         end_turn(payment.move.turn, None)
-    else:
-        end_turn(payment.move.turn, None)
-        raise Exception('all squared away')

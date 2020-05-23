@@ -43,6 +43,12 @@
         {% for color, cnt in monopolies.items() %}
             {% for card in user.cards.table.property[color] %}
                 <td 
+                {% if id == you
+                        and status.action.type == 'payment'
+                        and status.action.payments[you]  %}
+                    onclick=pay({{status.action.payments[you].id}},{{ card.id }})
+                    class="clicky"
+                {% endif %}
                     style="
                         {% if card.color == 'black' %} color: white {% endif %};
                         background: {{ card.secondary_color or color }}">

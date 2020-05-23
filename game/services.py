@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 from deck.services import build_deck, deal, DeckStatus, draw
-from turn.services import end_turn
+from turn.services import end_turn, end_move
 from .models import Game, Player
 
 
@@ -26,9 +26,15 @@ def start_turn(game):
 
 
 def whos_turn(game):
-    turn, found = game.get_active_turn()
-    if found and not turn.get_active_move() and turn.moves.count() >= 3:
-        end_turn(turn, None)
+    turn = game.get_active_turn()
+    if turn:
+        active_move = turn.get_active_move()
+        if not active_move and turn.moves.count() >= 3:
+            end_turn(turn, None)
+            turn = start_turn(game)
+        elif active_move and active_move.is_paid():
+            turn = end_move(active_move)
+    else:
         turn = start_turn(game)
     return turn
 
@@ -52,7 +58,7 @@ def _payment_action_mapper(turn, user, active_move):
         'payments': {p.victim.id if p.victim else None: {
                 'id': p.id,
                 'amount': p.amount,
-                'victim': p.victim.username if p.victim else None, 
+                'victim': p.victim.username if p.victim else None,
             }
             for p in active_move.payments.all()
         },

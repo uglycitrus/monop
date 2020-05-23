@@ -26,6 +26,6 @@ class Game(models.Model):
 
     def get_active_turn(self):
         try:
-            return self.turns.get(is_active=True), True
+            return self.turns.get(is_active=True)
         except ObjectDoesNotExist:
-            return start_turn(self), False
+            return None

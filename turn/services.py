@@ -59,18 +59,24 @@ def _action_mapper(move, card, turn, user_id):
 # TODO: 'Hotel', 'House'
 
 
+def end_move(move):
+    Move.objects.filter(id=move.id, is_active=True).update(is_active=False)
+    return end_turn(move.turn, None)
+
 def end_turn(turn, user_id):
+    if turn.moves.count() < 3:
+        return turn
     active_move = turn.moves.filter(is_active=True).first()
     if active_move:
         if active_move.is_paid():
+            return turn
+        else:
             Move.objects.filter(
                 id=active_move.id, is_active=True).update(is_active=None)
-        else:
-            return
     kwargs = {
         'id': turn.id,
         'is_active': True,
     }
     if user_id:
         kwargs['user_id'] = user_id
-    turn = Turn.objects.filter(**kwargs).update(is_active=None)
+    return Turn.objects.filter(**kwargs).update(is_active=None)
