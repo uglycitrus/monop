@@ -45,7 +45,8 @@ def _action_mapper(move, card, turn, user_id):
     elif card.is_deal_breaker:
         DealBreaker.objects.create(move=move)
     elif card.is_payment_generating:
-        users = [None, ] if card.victim_limit == 1 else turn.game.users
+        others = turn.game.users.exclude(id=user_id)
+        users = [None, ] if card.victim_limit == 1 else others
         amount = card.victim_amount or max_rent(user_id, card)
         if not amount:
             raise Exception('You cannot get money with that')
@@ -59,13 +60,17 @@ def _action_mapper(move, card, turn, user_id):
 
 
 def end_turn(turn, user_id):
+    active_move = turn.moves.filter(is_active=True).first()
+    if active_move:
+        if active_move.is_paid():
+            Move.objects.filter(
+                id=active_move.id, is_active=True).update(is_active=None)
+        else:
+            return
     kwargs = {
         'id': turn.id,
         'is_active': True,
     }
     if user_id:
         kwargs['user_id'] = user_id
-    active_move = turn.moves.filter(is_active=True).first()
-    if active_move and not active_move.is_paid():
-        raise Exception('active move not paid')
     turn = Turn.objects.filter(**kwargs).update(is_active=None)

@@ -63,7 +63,7 @@ def _action_picker(turn, user):
     active_move = turn.get_active_move()
     if active_move:
         if active_move.payments.exists():
-            _payment_action_mapper
+            return _payment_action_mapper(turn, user, active_move)
         else:
             return {'type': 'action is happening'}
     else:

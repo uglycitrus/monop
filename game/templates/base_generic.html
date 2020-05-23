@@ -47,25 +47,25 @@
 
         function move(turnID, cardID, asCash=false) {
             postXHR(
-                "http://127.0.0.1:8000/turn/" + turnID + "/" + cardID,
+                "/turn/" + turnID + "/" + cardID,
                 reqListener,
                 JSON.stringify({"as_cash": asCash}))
         }
 
         function flip(cardID) {
-            postXHR("http://127.0.0.1:8000/card/" + cardID + "/flip", reqListener)
+            postXHR("/card/" + cardID + "/flip", reqListener)
         }
 
         function startTurn(gameID) {
-            postXHR("http://127.0.0.1:8000/games/" + gameID + "/start-turn", reqListener);
+            postXHR("/games/" + gameID + "/start-turn", reqListener);
         }
 
         function pickVictim(paymentID, victimID) {
-            postXHR("http://127.0.0.1:8000/payments/" + paymentID + "/victim/" + victimID , reqListener);
+            postXHR("/payments/" + paymentID + "/victim/" + victimID , reqListener);
         }
 
         function pay(paymentID, cardID) {
-            postXHR("http://127.0.0.1:8000/payments/" + paymentID + "/pay/" + cardID , reqListener);
+            postXHR("/payments/" + paymentID + "/pay/" + cardID , reqListener);
         }
 
         function endTurnListener (gameID) {
@@ -73,7 +73,7 @@
         }
 
         function endTurn(gameID, turnID) {
-            postXHR("http://127.0.0.1:8000/turn/" + turnID + "/end", endTurnListener.bind(null, gameID));
+            postXHR("/turn/" + turnID + "/end", endTurnListener.bind(null, gameID));
         }
 
     </script>

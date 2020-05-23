@@ -17,7 +17,7 @@
     <tr>
         <td 
             {% if id != you and status.action.type == 'Pick Payment Victim' %}
-                onclick=pickVictim({{status.action.payment.id}},{{ id }})
+                onclick=pickVictim({{status.action.payment_id}},{{ id }})
                 class="clicky"
             {% elif id == status.turn.user %}
                 style="background-color: yellow"

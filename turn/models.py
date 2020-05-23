@@ -62,6 +62,13 @@ class Move(models.Model):
             ('turn', 'is_active'),
         )
 
+    def is_paid(self):
+        return (
+            self.payments
+                .annotate(paid=models.Sum('received__dollar_value'))
+                .filter(paid__gte=models.F('amount')).exists()
+        )
+
 
 class Turn(models.Model):
     is_active = models.NullBooleanField(default=None)
@@ -75,14 +82,6 @@ class Turn(models.Model):
         db_table = 'turn'
         unique_together = (
             ('game', 'is_active'),
-        )
-
-
-    def is_paid(self):
-        return (
-            self.payments
-                .annotate(paid=Sum('received__dollar_value'))
-                .filter(paid__lt=F('amount')).exists()
         )
 
     def get_active_move(self):
