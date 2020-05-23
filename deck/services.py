@@ -99,12 +99,13 @@ def flip(card_id, user_id):
         color=F('secondary_color'), secondary_color=F('color'))
 
 
-def max_rent(user_id, rent_card=None):
+def max_rent(user_id, game_id, rent_card=None):
     """
     Place a card from your hand on your table
     """
     kwargs = {
         'user_hand_id': None,
+        'game_id': game_id,
         'user_table_id': user_id,
         'card_type__in': (PROPERTY, PROPERTY_WILD),
     }
@@ -117,7 +118,7 @@ def max_rent(user_id, rent_card=None):
         color = s['color']
         rent_scale = RENT_VALUES.get(color, [])
         cnt = min(s['cnt'], len(rent_scale)) - 1
-        if cnt > 0:
+        if cnt >= 0:
             amount = rent_scale[cnt]
         else:
             continue

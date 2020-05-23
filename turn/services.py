@@ -47,7 +47,7 @@ def _action_mapper(move, card, turn, user_id):
     elif card.is_payment_generating:
         others = turn.game.users.exclude(id=user_id)
         users = [None, ] if card.victim_limit == 1 else others
-        amount = card.victim_amount or max_rent(user_id, card)
+        amount = card.victim_amount or max_rent(user_id, turn.game_id, card)
         if not amount:
             raise Exception('You cannot get money with that')
         for u in users:
