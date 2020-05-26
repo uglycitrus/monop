@@ -1,5 +1,7 @@
 <div class="action">
-    {% if status.action.type == 'payment' %}
+    {% if status.winner %}
+        <h1>Winner: {{ status.users[status.winner].name }}</h1>
+    {% elif status.action.type == 'payment' %}
         {% for victim_id, payment in status.action.payments.items() %}
             <h1>{{ payment.victim or '?' }}, PAY UP ${{ payment.amount }}M!</h1>
         {% endfor %}
@@ -11,8 +13,20 @@
         {% else %}
             <h1>Forced Deal!</h1>
         {% endif %}
-    {% elif status.action.type == 'ForcedDeal2' %}
+    {% elif status.action.type == 'DealBreaker2' or status.action.type == 'ForcedDeal2' or status.action.type == 'SlyDeal2' %}
         <h1>Accept Deal, or Say No</h1>
+    {% elif status.action.type == 'SlyDeal1' %}
+        {% if status.turn.user == you %}
+            <h1>Pick A Card</h1>
+        {% else %}
+            <h1>Sly Deal!</h1>
+        {% endif %}
+    {% elif status.action.type == 'DealBreaker1' %}
+        {% if status.turn.user == you %}
+            <h1>Pick a Monopoly</h1>
+        {% else %}
+            <h1>Deal Breaker!</h1>
+        {% endif %}
     {% elif status.turn.user == you %}
         <button onclick=endTurn({{ status.game_id }},{{ status.turn.id }})>END TURN</button>
     {% else %}

@@ -152,11 +152,11 @@ class DeckStatus():
     def _get_winner(self):
         monopoly_status = Counter()
         for user_id, cards in self.visible_cards.items():
-            for color, count in monopoly_status.items():
-                count = len(cards.get('table').get('property').get(color))
-                if MONOPOLIES[color] <= count:
+            for color, count in MONOPOLIES.items():
+                player_count = len(cards.get('table').get('property').get(color, []))
+                if player_count >= MONOPOLIES[color]:
                    self.visible_cards[user_id]['monopolies'].append(color)
-            if len(self.visible_cards[user_id]['monopolies']) > 3:
+            if len(self.visible_cards[user_id]['monopolies']) >= 3:
                 self.winner_id = user_id
 
     def _hand_cards(self):

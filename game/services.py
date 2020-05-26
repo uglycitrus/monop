@@ -68,21 +68,37 @@ def _payment_action_mapper(turn, user, active_move):
 def _action_picker(turn, user):
     active_move = turn.get_active_move()
     if active_move:
+        fd = active_move.get_forced_deal()
+        sd = active_move.get_sly_deal()
+        db = active_move.get_deal_breaker()
         if active_move.payments.exists():
             return _payment_action_mapper(turn, user, active_move)
-        elif active_move.forceddeal:
-            if not (active_move.forceddeal.offered_id and active_move.forceddeal.requested_id): 
-                return {'type': 'ForcedDeal1', 'id': active_move.forceddeal.id}
+        elif fd:
+            if not (fd.offered_id and fd.requested_id):
+                return {'type': 'ForcedDeal1', 'id': fd.id}
             else:
                 return {
                     'type': 'ForcedDeal2',
-                    'id': active_move.forceddeal.id,
-                    'highlighted_cards': [
-                        active_move.forceddeal.offered_id,
-                        active_move.forceddeal.requested_id,
-                    ]
+                    'highlighted_cards': [fd.offered_id, fd.requested_id, ]
                 }
-            
+
+        elif sd:
+            if not sd.requested_id:
+                return {'type': 'SlyDeal1', 'id': sd.id}
+            else:
+                return {
+                    'type': 'SlyDeal2',
+                    'highlighted_cards': [sd.requested_id, ]
+                }
+
+        elif db:
+            if not db.requested.exists():
+                return {'type': 'DealBreaker1', 'id': db.id}
+            else:
+                return {
+                    'type': 'DealBreaker2',
+                    'highlighted_cards': list(db.requested.values_list('id', flat=True)),
+                }
         else:
             return {'type': 'action is happening'}
     else:
@@ -109,18 +125,13 @@ def status(game, user):
     }
     if deck_status.winner_id:
         make_winner(game, deck_status.winner_id)
-        rtrn.update({
-            'turn': None,
-	    'action': None,
-        })
-    else:
-        turn = whos_turn(game)
-        rtrn.update({
-	    'action': _action_picker(turn, user),
-            'turn': {
-                'id': turn.id,
-                'user': turn.user_id,
-                'move_number': turn.moves.count(),
-            },
-        })
+    turn = whos_turn(game)
+    rtrn.update({
+        'action': _action_picker(turn, user),
+        'turn': {
+            'id': turn.id,
+            'user': turn.user_id,
+            'move_number': turn.moves.count(),
+        },
+    })
     return rtrn

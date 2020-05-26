@@ -1,5 +1,8 @@
 from deck.services import place, play, draw, max_rent
+from deck.models import Card
+from deck.constants import MONOPOLIES
 from payment.models import Payment
+from game.models import Player
 from .models import Turn, Move, SlyDeal, ForcedDeal, DealBreaker
 
 
@@ -22,6 +25,8 @@ def _validate_move(turn, index, card, user_id, as_cash=False):
 
 
 def move(turn, card, user_id, as_cash=False):
+    if Player.objects.filter(game_id=turn.game_id, is_winner=True).exists():
+        raise Exception('game over')
     index = turn.moves.count()
     _validate_move(turn, index, card, user_id, as_cash=as_cash)
     move = Move.objects.create(
@@ -80,29 +85,83 @@ def end_turn(turn, user_id):
     }
     if user_id:
         kwargs['user_id'] = user_id
-    return Turn.objects.filter(**kwargs).update(is_active=None)
+    turns = Turn.objects.filter(**kwargs)
+    turn = turns.first()
+    turns.update(is_active=None)
+    return turn
 
 
 def pick(move, card, user_id):
-    fd = move.forceddeal
+    fd = move.get_forced_deal()
+    sd = move.get_sly_deal()
+    db = move.get_deal_breaker()
     is_card_yours = move.turn.user_id == card.user_table_id
+    same_color_cards = card.user_table.table_cards.filter(color=card.color)
+    is_monop = same_color_cards.count() >= MONOPOLIES[card.color]
     if fd:
+        if is_monop:
+            raise Exception('you cannot Force Deal a monop')
         if is_card_yours:
             ForcedDeal.objects.filter(
                 id=fd.id,
                 offered=None
             ).update(offered=card)
         elif fd.requested and (card == fd.requested or card.is_say_no):
+            # TODO: only victim should be able to accept
             ForcedDeal.objects.filter(
                 id=fd.id,
                 received=None
             ).update(received=card)
-            Card.objects.filter(
-                id=card.id, user_table_id=card.user_id).update(
-                user_table_id=move.turn.user_id)
+            if not card.is_say_no:
+                Card.objects.filter(
+                    id=card.id, user_table_id=card.user_table_id).update(
+                    user_table_id=move.turn.user_id)
             end_move(move)
         else:
             ForcedDeal.objects.filter(
                 id=fd.id,
                 requested=None
             ).update(requested=card)
+
+    elif sd:
+        if is_monop:
+            raise Exception('you cannot Sly Deal a monop')
+        if is_card_yours:
+            raise Exception('you cannot Sly Deal your own cards')
+        if sd.requested and (card == sd.requested or card.is_say_no):
+            # TODO: only victim should be able to accept
+            SlyDeal.objects.filter(
+                id=sd.id,
+                received=None
+            ).update(received=card)
+            if not card.is_say_no:
+                Card.objects.filter(
+                    id=card.id, user_table_id=card.user_table_id).update(
+                    user_table_id=move.turn.user_id)
+            end_move(move)
+        else:
+            SlyDeal.objects.filter(
+                id=sd.id,
+                requested=None
+            ).update(requested=card)
+
+    if db:
+        if is_card_yours:
+            raise Exception('you cannot Deal Break your own cards')
+        if not is_monop:
+            raise Exception('you cannot Deal Break a partial set')
+        if db.requested.exists() and (
+                db.requested.filter(id=card.id).exists() or card.is_say_no):
+            # TODO: only victim should be able to accept
+            if card.is_say_no:
+                db.received.add(card)
+            else:
+                # TODO: are same_colors the requested?
+                db.received.add(*same_color_cards)
+                Card.objects.filter(
+                    id__in=same_color_cards.values_list('id', flat=True),
+                    user_table_id=card.user_table_id
+                ).update(user_table_id=move.turn.user_id)
+            end_move(move)
+        else:
+            db.requested.add(*same_color_cards)

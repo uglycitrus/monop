@@ -73,13 +73,42 @@ class Move(models.Model):
         )
 
     def is_complete(self):
-        return self.is_paid() and self.is_forced_deal_done()
+        return (
+            self.is_paid()
+            and self.is_deal_breaker_done()
+            and self.is_forced_deal_done()
+            and self.is_sly_deal_done()
+        )
+
+    def get_deal_breaker(self):
+        try:
+            return self.dealbreaker
+        except DealBreaker.DoesNotExist:
+            return None
+
+    def is_deal_breaker_done(self):
+        db = self.get_deal_breaker()
+        return db.received.exists() if db else True
+
+    def get_sly_deal(self):
+        try:
+            return self.slydeal
+        except SlyDeal.DoesNotExist:
+            return None
+
+    def is_sly_deal_done(self):
+        sd = self.get_sly_deal()
+        return sd.received if sd else True
+
+    def get_forced_deal(self):
+        try:
+            return self.forceddeal
+        except ForcedDeal.DoesNotExist:
+            return None
 
     def is_forced_deal_done(self):
-        if self.forceddeal:
-            return self.forceddeal.received
-        else:
-            return True
+        fd = self.get_forced_deal()
+        return fd.received if fd else True
 
     def is_paid(self):
         return not (

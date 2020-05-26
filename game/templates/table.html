@@ -55,6 +55,16 @@
                 {% elif card.id in status.action.highlighted_cards %}
                     onclick=pick({{status.turn.id}},{{ card.id }})
                     class="clicky highlighted"
+                {% elif id != you
+                        and status.turn.user == you
+                        and status.action.type == 'SlyDeal1' %}
+                    onclick=pick({{status.turn.id}},{{ card.id }})
+                    class="clicky highlighted"
+                {% elif id != you
+                        and status.turn.user == you
+                        and status.action.type == 'DealBreaker1' %}
+                    onclick=pick({{status.turn.id}},{{ card.id }})
+                    class="clicky highlighted"
                 {% endif %}
                     style="
                         {% if card.color == 'black' %} color: white {% endif %};
