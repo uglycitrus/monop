@@ -190,8 +190,8 @@ def pick(move, card, user_id):
     elif db:
         if is_card_yours:
             raise Exception('you cannot Deal Break your own cards')
-        if is_monop and not card.is_say_no:
-            raise Exception('you cannot Deal Break a partial set')
+        # if is_monop and not card.is_say_no:
+            # raise Exception('you cannot Deal Break a partial set')
         if db.requested.exists() and (
                 db.requested.filter(id=card.id).exists() or card.is_say_no):
             # TODO: only victim should be able to accept
