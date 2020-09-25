@@ -67,7 +67,7 @@
                     class="clicky highlighted"
                 {% endif %}
                     style="
-                        {% if card.color == 'black' %} color: white {% endif %};
+                        {% if card.color == 'black' or card.secondary_color == 'black' %} color: white {% endif %};
                         background: {{ card.secondary_color or color }}">
                     <!-- TODO: ENABLE FLIP ON WILDS -->
                     ${{ card.dollar_value }}M
