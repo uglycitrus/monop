@@ -49,11 +49,11 @@
             }
         }
 
-        function move(turnID, cardID, asCash=false) {
+        function move(turnID, cardID, asCash=false, discard=false) {
             postXHR(
                 "/turn/" + turnID + "/" + cardID,
                 reqListener,
-                JSON.stringify({"as_cash": asCash}))
+                JSON.stringify({"as_cash": asCash, "discard": discard}))
         }
 
         function flip(cardID) {
@@ -81,7 +81,7 @@
         }
 
         function endTurn(gameID, turnID) {
-            postXHR("/turn/" + turnID + "/end", endTurnListener.bind(null, gameID));
+            postXHR("/turn/" + turnID + "/end", endTurnListener.bind(this, gameID));
         }
 
     </script>

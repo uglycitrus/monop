@@ -16,7 +16,13 @@
         {% if card.card_type != 'money' 
             and card.card_type != 'property'
             and card.card_type != 'property wild card'
-        %}<button onclick=move({{ status.turn.id }},{{ card.id }},asCash=true)>Cash</button>{% endif %}<br/>
+        %}
+            <button onclick=move({{ status.turn.id }},{{ card.id }},asCash=true)>Cash</button>
+            {% if status.hand|length > 7  %}
+                <br/><button onclick=move({{ status.turn.id }},{{ card.id }},discard=true)>Discard</button>
+            {% endif %}<br/>
+        {% endif %}
+
         {% if card.name != 'Hotel' and card.name != 'House' %}
             <button onclick=move({{ status.turn.id }},{{ card.id }})>Play</button>
         {% endif %}

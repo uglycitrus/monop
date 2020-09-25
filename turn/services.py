@@ -97,6 +97,8 @@ def end_turn(turn, user_id):
         kwargs['user_id'] = user_id
     turns = Turn.objects.filter(**kwargs)
     turn = turns.first()
+    if turn.user.hand_cards.filter(game=turn.game).count() > 7:
+        raise Exception('you must discard')
     turns.update(is_active=None)
     return turn
 
@@ -181,3 +183,14 @@ def pick(move, card, user_id):
             end_move(move)
         else:
             db.requested.add(*same_color_cards)
+
+def discard(turn, card, user_id, as_cash=False):
+    if turn.user.hand_cards.filter(game=turn.game).count() <= 7:
+        raise Exception('you can only discard down to 7')
+    if turn.user_id != user_id or card.user_hand_id != user_id:
+        raise Exception('no perms to discard')
+    Card.objects.filter(id=card.id).update(
+        is_drawn=True,
+        user_hand_id=None,
+        user_table_id=None,
+    )
