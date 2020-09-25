@@ -2,6 +2,8 @@ import uuid
 from collections import defaultdict, Counter
 
 from django.db.models import Count, F
+from .deck_rules import PROPERTY_WILD
+from .constants import MONOPOLIES
 
 from .models import Card
 from .deck_rules import DECK_RULES, PROPERTY, PROPERTY_WILD
@@ -90,13 +92,28 @@ def place(card_id, user_id):
         user_hand=None, user_table=F('user_hand'))
 
 
-def flip(card_id, user_id):
+def flip(card, user_id):
     """
     Place a card from your hand on your table
     """
-    Card.objects.filter(
-        id=card_id, user_hand_id=user_id, user_table=None).update(
-        color=F('secondary_color'), secondary_color=F('color'))
+    if card.card_type == PROPERTY_WILD:
+        colors = list(MONOPOLIES.keys())
+        colors.sort()
+        try:
+            color = colors[(colors.index(card.color) + 1) % len(colors)]
+        except ValueError:
+            color = colors[0]
+        Card.objects.filter(
+            id=card.id, user_hand_id=user_id, user_table=None).update(
+            color=color)
+
+    elif card.user_hand:
+        Card.objects.filter(
+            id=card.id, user_hand_id=user_id, user_table=None).update(
+            color=F('secondary_color'), secondary_color=F('color'))
+    elif card.user_table_id == user_id:
+        #TODO: make a flip a move
+        pass
 
 
 def max_rent(user_id, game_id, rent_card=None):

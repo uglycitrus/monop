@@ -12,8 +12,6 @@ def _validate_move(turn, index, card, user_id, as_cash=False):
         raise Exception('only 3 moves per turn')
     if not (turn.user_id == card.user_hand_id == user_id):
         raise Exception('permission denied')
-    if turn.moves.filter(is_active=True).exists():
-        raise Exception('previous move hasn\'t completed')
     if card.is_double_rent and not as_cash:
         try:
             previous_move = Move.objects.get(
@@ -22,25 +20,34 @@ def _validate_move(turn, index, card, user_id, as_cash=False):
                 index=index - 1)
         except Move.DoesNotExist:
             raise Exception('you can only play this w/ rent')
+    elif turn.moves.filter(is_active=True).exists():
+        raise Exception('previous move hasn\'t completed')
 
 
 def move(turn, card, user_id, as_cash=False):
     if Player.objects.filter(game_id=turn.game_id, is_winner=True).exists():
         raise Exception('game over')
     index = turn.moves.count()
-    _validate_move(turn, index, card, user_id, as_cash=as_cash)
-    move = Move.objects.create(
-        turn=turn,
-        card=card,
-        index=index,
-        is_active=None if as_cash else card.is_move_active or None)
-
-    if as_cash or card.is_for_placing:
-        place(card.id, user_id)
+    if card.is_say_no:
+        move = Move.objects.get(
+            turn__game_id=card.game_id,
+            turn__is_active=True,
+            is_active=True)
+        pick(move, card, user_id)
     else:
-        play(card.id, user_id)
-        _action_mapper(move, card, turn, user_id)
-    return move
+        _validate_move(turn, index, card, user_id, as_cash=as_cash)
+        move = Move.objects.create(
+            turn=turn,
+            card=card,
+            index=index,
+            is_active=None if as_cash else card.is_move_active or None)
+
+        if as_cash or card.is_for_placing:
+            place(card.id, user_id)
+        else:
+            play(card.id, user_id)
+            _action_mapper(move, card, turn, user_id)
+        return move
 
 def _action_mapper(move, card, turn, user_id):
     if card.is_sly_deal:
@@ -65,8 +72,11 @@ def _action_mapper(move, card, turn, user_id):
 
 
 def end_move(move):
-    Move.objects.filter(id=move.id, is_active=True).update(is_active=None)
-    return end_turn(move.turn, None)
+    if move.is_complete():
+        Move.objects.filter(id=move.id, is_active=True).update(is_active=None)
+        return end_turn(move.turn, None)
+    else:
+        return move
 
 def end_turn(turn, user_id):
     if not user_id:
@@ -96,10 +106,16 @@ def pick(move, card, user_id):
     sd = move.get_sly_deal()
     db = move.get_deal_breaker()
     is_card_yours = move.turn.user_id == card.user_table_id
-    same_color_cards = card.user_table.table_cards.filter(color=card.color)
-    is_monop = same_color_cards.count() >= MONOPOLIES[card.color]
+    if card.is_say_no:
+        same_color_cards = Card.objects.none()
+        is_monop = False
+    else:
+        same_color_cards = card.user_table.table_cards.filter(
+            color=card.color,
+            game_id=card.game_id)
+        is_monop = same_color_cards.count() >= MONOPOLIES[card.color]
     if fd:
-        if is_monop:
+        if is_monop and not card.is_say_no:
             raise Exception('you cannot Force Deal a monop')
         if is_card_yours:
             ForcedDeal.objects.filter(
@@ -124,7 +140,7 @@ def pick(move, card, user_id):
             ).update(requested=card)
 
     elif sd:
-        if is_monop:
+        if is_monop and not card.is_say_no:
             raise Exception('you cannot Sly Deal a monop')
         if is_card_yours:
             raise Exception('you cannot Sly Deal your own cards')
@@ -145,10 +161,10 @@ def pick(move, card, user_id):
                 requested=None
             ).update(requested=card)
 
-    if db:
+    elif db:
         if is_card_yours:
             raise Exception('you cannot Deal Break your own cards')
-        if not is_monop:
+        if is_monop and not card.is_say_no:
             raise Exception('you cannot Deal Break a partial set')
         if db.requested.exists() and (
                 db.requested.filter(id=card.id).exists() or card.is_say_no):

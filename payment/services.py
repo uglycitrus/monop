@@ -1,5 +1,5 @@
 from deck.models import Card
-from turn.services import end_turn
+from turn.services import end_move
 from .models import Payment
 
 
@@ -20,4 +20,4 @@ def pay(payment, card, user_id):
             id=card.id,
             user_table_id=user_id).update(
             user_table_id=payment.move.turn.user_id)
-        end_turn(payment.move.turn, None)
+        end_move(payment.move)

@@ -1,6 +1,6 @@
 <div class="hand">
 {% for card in status.hand %}
-<div class="card">
+<div class="card" style="border: 1px solid {% if loop.index <= 7 %}black{% else %}red{% endif %}">
     <div class="top" style="
             {% if card.color == 'black' %} color: white {% endif %};
             background-color: {{ card.color }}">
@@ -12,7 +12,7 @@
             {% if card.secondary_color == 'black' %} color: white {% endif %};
             background-color: {{ card.secondary_color }}
     ">
-        {% if card.secondary_color %}<button onclick=flip({{ card.id }})>FLIP</button>{% endif %}<br/>
+        {% if card.secondary_color or card.card_type == 'property wild card'%}<button onclick=flip({{ card.id }})>FLIP</button>{% endif %}<br/>
         {% if card.card_type != 'money' 
             and card.card_type != 'property'
             and card.card_type != 'property wild card'

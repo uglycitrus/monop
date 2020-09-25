@@ -14,6 +14,19 @@ COLOR_CHOICES = tuple((color, color) for color in RENT_VALUES.keys())
 CARD_CHOICES = tuple((k, k) for k in DECK_RULES.keys())
 
 
+class DiscardPileManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(
+            is_drawn=True,
+            user_hand_id=None,
+            user_table_id=None,
+        )
+
+    def shuffle(self, game_id):
+        discarded = self.get_queryset().filter(
+            game_id=game_id).update(is_drawn=False)
+
+
 class DrawPileManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(is_drawn=False)
@@ -21,11 +34,18 @@ class DrawPileManager(models.Manager):
     def draw(self, game_id, user_id, count=2):
         ids = set(self.get_queryset().filter(
             game_id=game_id).values_list('id', flat=True))
-        # TODO: if ids < count, shuffle
-        draw_ids = random.sample(ids, count)
+        try:
+            draw_ids = random.sample(ids, count)
+            needs_shuffle = False
+        except ValueError:
+            draw_ids = ids
+            needs_shuffle = True
         self.get_queryset().filter(id__in=draw_ids).update(
             is_drawn=True,
             user_hand_id=user_id)
+        if needs_shuffle:
+            Card.discard_pile_objects.shuffle(game_id)
+            draw_ids |= self.draw(game_id, user_id, count=count - len(draw_ids))
         return draw_ids 
 
 
@@ -58,6 +78,7 @@ class Card(models.Model):
 
     objects = models.Manager()
     draw_pile_objects = DrawPileManager()
+    discard_pile_objects = DiscardPileManager()
 
     class Meta:
         db_table = 'card'

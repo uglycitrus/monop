@@ -112,7 +112,14 @@ def status(game, user):
     deck_status = DeckStatus(game.id, user.id)
     deck_status.get_status()
     players = Player.objects.filter(game=game)
+    turn = whos_turn(game)
     rtrn = {
+        'action': _action_picker(turn, user),
+        'turn': {
+            'id': turn.id,
+            'user': turn.user_id,
+            'move_number': turn.moves.count(),
+        },
         'winner': deck_status.winner_id,
         'hand': deck_status.hand,
         'game_id': game.id,
@@ -125,13 +132,4 @@ def status(game, user):
     }
     if deck_status.winner_id:
         make_winner(game, deck_status.winner_id)
-    turn = whos_turn(game)
-    rtrn.update({
-        'action': _action_picker(turn, user),
-        'turn': {
-            'id': turn.id,
-            'user': turn.user_id,
-            'move_number': turn.moves.count(),
-        },
-    })
     return rtrn
