@@ -29,7 +29,9 @@ def whos_turn(game):
     turn = game.get_active_turn()
     if turn:
         active_move = turn.get_active_move()
-        if not active_move and turn.moves.count() >= 3:
+        if (not active_move
+                and not turn.user_needs_discard()
+                and turn.moves.count() >= 3):
             end_turn(turn, None)
             turn = start_turn(game)
         elif active_move and active_move.is_complete():

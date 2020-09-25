@@ -138,3 +138,6 @@ class Turn(models.Model):
             return self.moves.get(is_active=True)
         except ObjectDoesNotExist:
             return None
+
+    def user_needs_discard(self):
+        return self.user.hand_cards.filter(game=self.game).count() > 7

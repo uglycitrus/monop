@@ -18,6 +18,9 @@ def _validate_move(turn, index, card, user_id, as_cash=False):
                 turn=turn,
                 card__card_type='rent',
                 index=index - 1)
+            # TODO: move the line below.
+            #       this is actually doubling the rent in the validator
+            previous_move.payments.update(amount=F('amount') * 2)
         except Move.DoesNotExist:
             raise Exception('you can only play this w/ rent')
     elif turn.moves.filter(is_active=True).exists():
@@ -79,6 +82,11 @@ def end_move(move):
         return move
 
 def end_turn(turn, user_id):
+    """
+    turn: turn you'd like to end
+    user_id: user_id that's trying to manually end turn
+             if user_id None, turn is ended by a move, not "end turn" button
+    """
     if not user_id:
         if turn.moves.count() < 3:
             return turn
@@ -97,9 +105,12 @@ def end_turn(turn, user_id):
         kwargs['user_id'] = user_id
     turns = Turn.objects.filter(**kwargs)
     turn = turns.first()
-    if turn.user.hand_cards.filter(game=turn.game).count() > 7:
-        raise Exception('you must discard')
-    turns.update(is_active=None)
+    if turn.user_needs_discard():
+        if user_id:
+            # only raise if manually ending a turn
+            raise Exception('you must discard')
+    else:
+        turns.update(is_active=None)
     return turn
 
 
