@@ -1,6 +1,9 @@
+from django.db.models import F
+
 from deck.services import place, play, draw, max_rent
 from deck.models import Card
 from deck.constants import MONOPOLIES
+from deck.deck_rules import PROPERTY_WILD
 from payment.models import Payment
 from game.models import Player
 from .models import Turn, Move, SlyDeal, ForcedDeal, DealBreaker
@@ -37,6 +40,16 @@ def move(turn, card, user_id, as_cash=False):
             turn__is_active=True,
             is_active=True)
         pick(move, card, user_id)
+    elif turn.user_id == card.user_table_id and card.card_type == PROPERTY_WILD:
+        Card.objects.filter(
+            id=card.id, user_table_id=user_id, user_hand=None).update(
+            color=F('secondary_color'), secondary_color=F('color'))
+        move = Move.objects.create(
+            turn=turn,
+            card=card,
+            index=index,
+            is_active=None)
+        return move
     else:
         _validate_move(turn, index, card, user_id, as_cash=as_cash)
         move = Move.objects.create(

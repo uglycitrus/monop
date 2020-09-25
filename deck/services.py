@@ -96,7 +96,17 @@ def flip(card, user_id):
     """
     Place a card from your hand on your table
     """
-    if card.card_type == PROPERTY_WILD:
+    if user_id not in (card.user_hand_id, card.user_table_id):
+        raise Exception('permission denied')
+    if card.card_type != PROPERTY_WILD:
+        return
+
+    if card.secondary_color:
+        if card.user_hand_id:
+            Card.objects.filter(
+                id=card.id, user_hand_id=user_id, user_table=None).update(
+                color=F('secondary_color'), secondary_color=F('color'))
+    else:
         colors = list(MONOPOLIES.keys())
         colors.sort()
         try:
@@ -107,13 +117,6 @@ def flip(card, user_id):
             id=card.id, user_hand_id=user_id, user_table=None).update(
             color=color)
 
-    elif card.user_hand:
-        Card.objects.filter(
-            id=card.id, user_hand_id=user_id, user_table=None).update(
-            color=F('secondary_color'), secondary_color=F('color'))
-    elif card.user_table_id == user_id:
-        #TODO: make a flip a move
-        pass
 
 
 def max_rent(user_id, game_id, rent_card=None):

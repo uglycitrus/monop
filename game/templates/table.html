@@ -65,6 +65,11 @@
                         and status.action.type == 'DealBreaker1' %}
                     onclick=pick({{status.turn.id}},{{ card.id }})
                     class="clicky highlighted"
+                {% elif id == you
+                        and status.turn.user == you
+                        and card.card_type == 'property wild card' %}
+                    onclick=move({{status.turn.id}},{{ card.id }})
+                    class="clicky"
                 {% endif %}
                     style="
                         {% if card.color == 'black' or card.secondary_color == 'black' %} color: white {% endif %};
